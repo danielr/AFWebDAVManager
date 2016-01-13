@@ -548,9 +548,16 @@ static NSString * AFWebDAVStringForLockType(AFWebDAVLockType type) {
         }
     }
 
-    self.contentLength = [[[propElement firstChildWithTag:@"getcontentlength" inNamespace:@"D"] numberValue] unsignedIntegerValue];
-    self.creationDate = [[propElement firstChildWithTag:@"creationdate" inNamespace:@"D"] dateValue];
-    self.lastModifiedDate = [[propElement firstChildWithTag:@"getlastmodified" inNamespace:@"D"] dateValue];
+    // apache2 mod_dav uses the "lp1" xmlns prefix
+    // NB: The correct way would be to compare the namespace href rather than the prefix! However, Ono does not provide a way to do that.
+    ONOXMLElement *contentLengthElement = [propElement firstChildWithTag:@"getcontentlength" inNamespace:@"D"] ?: [propElement firstChildWithTag:@"getcontentlength" inNamespace:@"lp1"];
+    self.contentLength = [[contentLengthElement numberValue] unsignedIntegerValue];
+    
+    ONOXMLElement *creationDateElement = [propElement firstChildWithTag:@"creationdate" inNamespace:@"D"] ?: [propElement firstChildWithTag:@"creationdate" inNamespace:@"lp1"];
+    self.creationDate = [creationDateElement dateValue];
+    
+    ONOXMLElement *lastModifiedDateElement = [propElement firstChildWithTag:@"getlastmodified" inNamespace:@"D"] ?: [propElement firstChildWithTag:@"getlastmodified" inNamespace:@"lp1"];
+    self.lastModifiedDate = [lastModifiedDateElement dateValue];
 
     return self;
 }
